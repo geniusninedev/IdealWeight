@@ -123,6 +123,22 @@
                 android:layout_width="fill_parent"
                 android:layout_height="2dip"
                 android:background="#000000" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_gravity="center">
+                <TextView
+                    android:text=" Result"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/textViewResult"
+                    android:textStyle="bold"
+                    android:layout_weight="1"
+                    android:textSize="18dp"
+                    android:textColor="@color/colorPrimary" />
+            </LinearLayout>
             <!-- Text view for showing result -->
             <LinearLayout
                 android:layout_width="match_parent"
