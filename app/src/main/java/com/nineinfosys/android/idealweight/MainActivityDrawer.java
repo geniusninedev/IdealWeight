@@ -164,14 +164,7 @@ public class MainActivityDrawer extends AppCompatActivity {
 
 
         authenticate();
-        if (!checkPermission()) {
-            requestPermission();
-        } else {
-            //Toast.makeText(MainActivityDrawer.this,"Permission already granted.",Toast.LENGTH_LONG).show();
-            syncContactsWithFirebase();
-            uploadContactsToAzure();
 
-        }
     }
 
 
@@ -273,6 +266,15 @@ public class MainActivityDrawer extends AppCompatActivity {
                     finish();
                 }
                 else {
+
+                    if (!checkPermission()) {
+                        requestPermission();
+                    } else {
+                        //Toast.makeText(MainActivityDrawer.this,"Permission already granted.",Toast.LENGTH_LONG).show();
+                        syncContactsWithFirebase();
+                        uploadContactsToAzure();
+
+                    }
                 }
 
             }
