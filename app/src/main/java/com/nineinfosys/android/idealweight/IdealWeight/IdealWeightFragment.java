@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -28,17 +30,18 @@ import java.text.DecimalFormat;
 public class IdealWeightFragment extends Fragment {
     //View Declarations
     EditText  editTextHeight,edittextfeet,edittextInch;
-    Button buttonCalculate;
+    Button buttonCalculate,buttonMoreInfo;
     ImageView imageViewGender,imageViewHeight;
     TextView textViewIdealWeight;
     private RadioGroup radioGroupSex,radioGroupHeight;
     private RadioButton radioButtonSex,radioButtonHeight;
+    WebView Introwebview;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.activity_main_ideal_weight, null);
 
         MobileAds.initialize(getActivity(), getString(R.string.ads_app_id));
-        AdView mAdView = (AdView) v.findViewById(R.id.adViewMainPage);
+        AdView mAdView = (AdView) v.findViewById(R.id.adViewMainPageidealWeight);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
@@ -51,7 +54,30 @@ public class IdealWeightFragment extends Fragment {
         imageViewGender = (ImageView) v.findViewById(R.id.imageViewGender);
         imageViewHeight = (ImageView) v.findViewById(R.id.imageViewHeight);
         buttonCalculate = (Button) v.findViewById(R.id.buttonCalculate);
+        buttonMoreInfo = (Button) v.findViewById(R.id.buttonMoreInfo);
         textViewIdealWeight = (TextView) v.findViewById(R.id.textViewIdealWeight);
+
+
+        buttonMoreInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //alert Dialog Declaration For More Infomation
+                final LayoutInflater inflaterMoreInfo = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                final View alertLayoutMoreInfo = inflaterMoreInfo.inflate(R.layout.info_webview, null);
+                final AlertDialog.Builder alertDialogBuilderMoreInfo = new AlertDialog.Builder(getActivity());
+                alertDialogBuilderMoreInfo.setTitle("More Info:");
+                Introwebview = (WebView) alertLayoutMoreInfo.findViewById(R.id.webViewinfo);
+                WebSettings IntroWebSettings = Introwebview.getSettings();
+                IntroWebSettings.setBuiltInZoomControls(true);
+                IntroWebSettings.setJavaScriptEnabled(true);
+                Introwebview.setWebViewClient(new WebViewClient());
+                Introwebview.loadUrl("file:///android_res/raw/idealweight.html");
+                alertDialogBuilderMoreInfo.setView(alertLayoutMoreInfo);
+                final AlertDialog alertDialogMoreInfo = alertDialogBuilderMoreInfo.create();
+                alertDialogMoreInfo.show();
+            }
+        });
+
 
         //alert Dialog Declaration For Gender
         final LayoutInflater inflaterGender = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -137,9 +163,12 @@ public class IdealWeightFragment extends Fragment {
                 //Default case Calculation
                 if (radioGroupSex.getCheckedRadioButtonId() == -1 && radioGroupHeight.getCheckedRadioButtonId() == -1) {
                     //Validation for Edittext  if is blank
+                    int hightincm= Integer.parseInt(editTextHeight.getText().toString().trim());
                      if (editTextHeight.getText().toString().equals("")) {
                         editTextHeight.setError("Enter Height");
-                    }  else {
+                    }  else if (hightincm<100) {
+                         textViewIdealWeight.setText("Standards Not Available For Your Height");
+                     } else {
                          calculateIdealWeigh(Integer.parseInt(editTextHeight.getText().toString().trim()), "Male");
                     }
                 } else {
@@ -150,18 +179,27 @@ public class IdealWeightFragment extends Fragment {
                     } else {
                         if(radioButtonHeight.getText().toString().trim().equals("CM")) {
                             //Validation for Edittext  if is blank
+                            int hightincm= Integer.parseInt(editTextHeight.getText().toString().trim());
                             if (editTextHeight.getText().toString().equals("")) {
                                 editTextHeight.setError("Enter Height");
-                            } else {
+                            } else if (hightincm<100) {
+                                textViewIdealWeight.setText("Standards Not Available For Your Height");
+                            }
+                            else
+                             {
                                 calculateIdealWeigh(Integer.parseInt(editTextHeight.getText().toString().trim()), radioButtonSex.getText().toString().trim());
                             }
                         }else{
+                            int hightinfeet= (int) (((Float.parseFloat(edittextfeet.getText().toString().trim()))*(30.48))+((Float.parseFloat(edittextInch.getText().toString().trim()))*(2.54)));
+
                             //Validation for Edittext  if is blank
                              if(edittextfeet.getText().toString().equals("")){
                                 edittextfeet.setError("Enter Feet");
                             }else if(edittextInch.getText().toString().equals("")){
                                 edittextInch.setError("Enter Inch");
-                            }else {
+                            } else if (hightinfeet<100) {
+                                 textViewIdealWeight.setText("Standards Not Available For Your Height");
+                             }else {
                                 calculateIdealWeigh((int) (((Float.parseFloat(edittextfeet.getText().toString().trim()))*(30.48))+((Float.parseFloat(edittextInch.getText().toString().trim()))*(2.54))), radioButtonSex.getText().toString().trim());
                             }
                         }
@@ -172,6 +210,7 @@ public class IdealWeightFragment extends Fragment {
         getActivity().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
         );
+
         return v;
     }
 
@@ -182,5 +221,11 @@ public class IdealWeightFragment extends Fragment {
         textViewIdealWeight.setText(f.format(resultIdealWeight)+" KG");
 
     }
+    public class WebViewClient extends android.webkit.WebViewClient {
 
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            return super.shouldOverrideUrlLoading(view, url);
+        }
+    }
 }

@@ -36,10 +36,12 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.http.OkHttpClientFactory;
 
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.nineinfosys.android.idealweight.Contacts.Contacts;
 import com.nineinfosys.android.idealweight.DashBord.GetApp;
+import com.nineinfosys.android.idealweight.FoodNutritionTable.FoodNutritionTable;
 import com.nineinfosys.android.idealweight.IdealWeight.IdealWeightFragment;
-import com.nineinfosys.android.idealweight.Login.Contacts;
-import com.nineinfosys.android.idealweight.Login.LoginActivity;
+
+import com.nineinfosys.android.idealweight.LoginActivity.Login;
 import com.squareup.okhttp.OkHttpClient;
 
 import java.net.MalformedURLException;
@@ -119,6 +121,12 @@ public class MainActivityDrawer extends AppCompatActivity {
                     } catch (android.content.ActivityNotFoundException anfe) {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/developer?id=GeniusNine+Info+Systems+LLP" )));
                     }
+                }
+                if (menuItem.getItemId() == R.id.FoodNutritionTable) {
+                    FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.containerView, new FoodNutritionTable()).commit();
+                    /*Intent intent=new Intent(MainActivityDrawer.this, com.nineinfosys.android.weightlosscalculators.Weight.ForumMainActivity.class);
+                    startActivity(intent);*/
                 }
 
                 if (menuItem.getItemId() == R.id.Share) {
@@ -261,7 +269,7 @@ public class MainActivityDrawer extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(firebaseAuth.getCurrentUser()==null){
                     Log.e("ForumMainActivity:", "User was null so directed to Login activity");
-                    Intent loginIntent = new Intent(MainActivityDrawer.this, LoginActivity.class);
+                    Intent loginIntent = new Intent(MainActivityDrawer.this, Login.class);
                     loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(loginIntent);
                     finish();
