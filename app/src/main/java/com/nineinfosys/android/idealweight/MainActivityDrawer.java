@@ -28,6 +28,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -39,6 +41,7 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.nineinfosys.android.idealweight.Contacts.Contacts;
 import com.nineinfosys.android.idealweight.DashBord.GetApp;
 import com.nineinfosys.android.idealweight.FoodNutritionTable.FoodNutritionTable;
+import com.nineinfosys.android.idealweight.Forum.ForumActivity;
 import com.nineinfosys.android.idealweight.IdealWeight.IdealWeightFragment;
 
 import com.nineinfosys.android.idealweight.LoginActivity.Login;
@@ -58,9 +61,9 @@ public class MainActivityDrawer extends AppCompatActivity {
     FragmentManager mFragmentManager;
     FragmentTransaction mFragmentTransaction;
    public Toolbar toolbar;
-
+    private DatabaseReference mDatabaseUserData;
     private static final int PERMISSION_REQUEST_CODE = 200;
-
+    private FloatingActionButton fab;
     ///Azure Database connection for contact uploading
     private MobileServiceClient mobileServiceClientContactUploading;
     private MobileServiceTable<Contacts> mobileServiceTableContacts;
@@ -73,7 +76,11 @@ public class MainActivityDrawer extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
         setContentView(R.layout.drawermain);
+
+        AppEventsLogger.activateApp(this);
 
         /**
          *Setup the DrawerLayout and NavigationView
@@ -89,6 +96,7 @@ public class MainActivityDrawer extends AppCompatActivity {
          * Here , we are inflating the TabFragment as the first Fragment
          */
         firebaseAuth=FirebaseAuth.getInstance();
+        mDatabaseUserData = FirebaseDatabase.getInstance().getReference().child(getString(R.string.app_id)).child("Users");
         mFragmentManager = getSupportFragmentManager();
         mFragmentTransaction = mFragmentManager.beginTransaction();
         mNavigationView.setItemIconTintList(null);
@@ -97,7 +105,16 @@ public class MainActivityDrawer extends AppCompatActivity {
         /**
          * Setup click events on the Navigation View Items.
          */
-
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  Toast.makeText(MainActivityDrawer.this,"This Is Under Consturtion", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(MainActivityDrawer.this, ForumActivity.class));
+                /*Intent intent = new Intent(MainActivity.this, NewMessageActivity.class);
+                startActivity(intent);*/
+            }
+        });
 
 
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -177,88 +194,6 @@ public class MainActivityDrawer extends AppCompatActivity {
     }
 
 
-    ///Uploading contacts to azure
-    private void uploadContactsToAzure(){
-        initializeAzureTable();
-        fetchContacts();
-        uploadContact();
-    }
-    private void initializeAzureTable() {
-        try {
-            mobileServiceClientContactUploading = new MobileServiceClient(
-                    getString(R.string.web_address),
-                    this);
-            mobileServiceClientContactUploading.setAndroidHttpClientFactory(new OkHttpClientFactory() {
-                @Override
-                public OkHttpClient createOkHttpClient() {
-                    OkHttpClient client = new OkHttpClient();
-                    client.setReadTimeout(20, TimeUnit.SECONDS);
-                    client.setWriteTimeout(20, TimeUnit.SECONDS);
-                    return client;
-                }
-            });
-            mobileServiceTableContacts = mobileServiceClientContactUploading.getTable(Contacts.class);
-
-
-        } catch (MalformedURLException e) {
-
-        } catch (Exception e) {
-
-        }
-    }
-    private void fetchContacts(){
-        try {
-            azureContactArrayList = new ArrayList<Contacts>();
-
-            Cursor phone=getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,null,null,null);
-
-            while(phone.moveToNext()){
-                Contacts contact = new Contacts();
-                contact.setContactname(phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)));
-                contact.setContactnumber(phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-                contact.setFirebaseid(firebaseAuth.getCurrentUser().getUid());
-                azureContactArrayList.add(contact);
-
-            }
-            phone.close();
-        }catch (Exception e){
-        }
-    }
-    private void uploadContact() {
-        for (Contacts c : azureContactArrayList) {
-            try {
-                asyncUploader(c);
-            }
-            catch (Exception e){
-                Log.e("uploadContact : ", e.toString());
-            }
-        }
-    }
-    private void asyncUploader(Contacts contact){
-        final Contacts item = contact;
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                try {
-                    mobileServiceTableContacts.insert(item);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-
-                            } catch (Exception e) {
-                            }
-
-
-                        }
-                    });
-                } catch (final Exception e) {
-                }
-                return null;
-            }
-        };
-        task.execute();
-    }
 
 
     ///Authentication with firebase
@@ -276,12 +211,12 @@ public class MainActivityDrawer extends AppCompatActivity {
                 }
                 else {
 
+                    saveNewUser();
                     if (!checkPermission()) {
                         requestPermission();
                     } else {
                         //Toast.makeText(MainActivityDrawer.this,"Permission already granted.",Toast.LENGTH_LONG).show();
                         syncContactsWithFirebase();
-                        uploadContactsToAzure();
 
                     }
                 }
@@ -290,6 +225,15 @@ public class MainActivityDrawer extends AppCompatActivity {
         };
 
     }
+
+    private void saveNewUser() {
+
+        String user_id = firebaseAuth.getCurrentUser().getUid();
+        DatabaseReference current_user_db = mDatabaseUserData.child(user_id);
+
+        current_user_db.child("id").setValue(user_id);
+    }
+
 
     @Override
     protected void onStart() {
