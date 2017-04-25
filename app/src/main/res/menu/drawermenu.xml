@@ -2,14 +2,6 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-
-    <group android:id="@+id/grp4" android:checkableBehavior="single" >
-        <item
-            android:id="@+id/IdealWeight"
-            android:icon="@drawable/btn_ideal_weight"
-            android:title="Ideal Weight" />
-
-    </group>
     <group android:id="@+id/grp16" android:checkableBehavior="single" >
         <item
             android:id="@+id/FoodNutritionTable"
